@@ -56,6 +56,9 @@ struct SettingsView: View {
                 Toggle("Immersive mode: auto-hide macOS Dock and menu bar while LumaShell is active", isOn: $controller.immersiveMode)
                     .toggleStyle(.switch)
 
+                Toggle("Show real Desktop files inside LumaShell", isOn: $controller.showDesktopFiles)
+                    .toggleStyle(.switch)
+
                 Toggle("Launch LumaShell at login", isOn: $launchAtLogin)
                     .toggleStyle(.switch)
                     .onChange(of: launchAtLogin) { enabled in

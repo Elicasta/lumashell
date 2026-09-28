@@ -58,8 +58,22 @@ public struct ShellTheme: Identifiable, Equatable, Sendable {
     public let computerLabel: String
     public let trashLabel: String
     public let preferredMonospacedUI: Bool
+    public let defaultWidgets: [WidgetKind]
 
-    public init(id: ShellThemeID, name: String, subtitle: String, layout: ShellLayout, colors: ShellThemeColors, panelHeight: Double, cornerRadius: Double, startLabel: String, computerLabel: String, trashLabel: String, preferredMonospacedUI: Bool = false) {
+    public init(
+        id: ShellThemeID,
+        name: String,
+        subtitle: String,
+        layout: ShellLayout,
+        colors: ShellThemeColors,
+        panelHeight: Double,
+        cornerRadius: Double,
+        startLabel: String,
+        computerLabel: String,
+        trashLabel: String,
+        preferredMonospacedUI: Bool = false,
+        defaultWidgets: [WidgetKind] = []
+    ) {
         self.id = id
         self.name = name
         self.subtitle = subtitle
@@ -71,5 +85,6 @@ public struct ShellTheme: Identifiable, Equatable, Sendable {
         self.computerLabel = computerLabel
         self.trashLabel = trashLabel
         self.preferredMonospacedUI = preferredMonospacedUI
+        self.defaultWidgets = defaultWidgets
     }
 }

@@ -51,6 +51,60 @@ struct SettingsView: View {
                     }
                 }
 
+                sectionTitle("WIDGETS")
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 8)], spacing: 8) {
+                    ForEach(WidgetKind.allCases) { kind in
+                        Toggle(kind.displayName, isOn: Binding(
+                            get: { controller.enabledWidgets.contains(kind) },
+                            set: { controller.setWidget(kind, enabled: $0) }
+                        ))
+                        .toggleStyle(.switch)
+                        .padding(9)
+                        .background(Color(hex: theme.colors.panel))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: max(theme.cornerRadius, 3))
+                                .stroke(Color(hex: theme.colors.border).opacity(0.55), lineWidth: 1)
+                        )
+                    }
+                }
+
+                HStack {
+                    Text("Each theme remembers its own widget layout.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color(hex: theme.colors.mutedText))
+                    Spacer()
+                    Button("Reset Theme Widgets") {
+                        controller.resetWidgetsForCurrentTheme()
+                    }
+                    .buttonStyle(ShellButtonStyle(theme: theme, compact: true))
+                }
+
+                sectionTitle("LUMA AI")
+
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(controller.isAIConfigured ? "Development AI connected" : "AI tool router ready")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(
+                            controller.isAIConfigured
+                                ? "GPT-5.6 Luna can launch apps, change themes, manage widgets, and open common folders."
+                                : "For this private development build, launch with OPENAI_API_KEY set. A backend should replace direct-key mode before public distribution."
+                        )
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color(hex: theme.colors.mutedText))
+                    }
+
+                    Spacer()
+
+                    Button("Open Luma") {
+                        controller.setWidget(.assistant, enabled: true)
+                        controller.isAssistantOpen = true
+                        controller.isSettingsOpen = false
+                    }
+                    .buttonStyle(ShellButtonStyle(theme: theme, compact: true))
+                }
+
                 sectionTitle("SHELL")
 
                 Toggle("Immersive mode: auto-hide macOS Dock and menu bar while LumaShell is active", isOn: $controller.immersiveMode)
@@ -72,7 +126,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Accessibility")
                             .font(.system(size: 12, weight: .semibold))
-                        Text(accessibilityTrusted ? "Granted. Future window-control modules can move and manage app windows." : "Not granted. Basic shell features still work.")
+                        Text(accessibilityTrusted ? "Granted. Window-control modules can build on this permission." : "Not granted. Basic shell features still work.")
                             .font(.system(size: 10))
                             .foregroundStyle(Color(hex: theme.colors.mutedText))
                     }

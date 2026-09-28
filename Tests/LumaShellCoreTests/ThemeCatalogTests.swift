@@ -27,7 +27,17 @@ final class ThemeCatalogTests: XCTestCase {
         }
     }
 
-    func testCyberpunkThemeUsesCommandDeckLayout() {
+    func testEveryThemeHasUsefulWidgets() {
+        for theme in ThemeCatalog.all {
+            XCTAssertFalse(theme.defaultWidgets.isEmpty)
+            XCTAssertTrue(theme.defaultWidgets.contains(.clock))
+            XCTAssertTrue(theme.defaultWidgets.contains(.assistant))
+        }
+    }
+
+    func testThemeBehaviorStaysDistinct() {
+        XCTAssertEqual(ThemeCatalog.theme(.macOS9).layout, .classicMac)
+        XCTAssertEqual(ThemeCatalog.theme(.windowsXP).layout, .taskbar)
         XCTAssertEqual(ThemeCatalog.theme(.cyberpunk).layout, .commandDeck)
     }
 }

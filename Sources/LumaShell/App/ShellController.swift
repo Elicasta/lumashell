@@ -3,11 +3,23 @@ import Combine
 import Foundation
 import LumaShellCore
 
+struct AssistantMessage: Identifiable {
+    enum Role: Equatable {
+        case user
+        case assistant
+    }
+
+    let id = UUID()
+    let role: Role
+    let text: String
+}
+
 @MainActor
 final class ShellController: ObservableObject {
     @Published var selectedThemeID: ShellThemeID {
         didSet {
             UserDefaults.standard.set(selectedThemeID.rawValue, forKey: Keys.theme)
+            enabledWidgets = WidgetEngine.load(for: theme)
         }
     }
 
@@ -24,8 +36,15 @@ final class ShellController: ObservableObject {
         }
     }
 
+    @Published var enabledWidgets: Set<WidgetKind>
     @Published var isLauncherOpen = false
     @Published var isSettingsOpen = false
+    @Published var isAssistantOpen = false
+    @Published var assistantBusy = false
+    @Published var assistantDraft = ""
+    @Published var assistantMessages: [AssistantMessage] = [
+        AssistantMessage(role: .assistant, text: "Luma online. Ask me to open an app, change the theme, manage widgets, or open a folder.")
+    ]
     @Published var browserURL: URL?
     @Published var appSearch = ""
     @Published private(set) var installedApps: [ShellAppItem] = []
@@ -35,20 +54,30 @@ final class ShellController: ObservableObject {
     var immersiveModeDidChange: ((Bool) -> Void)?
 
     private var workspaceObservers: [NSObjectProtocol] = []
+    private let aiClient = LumaAIClient()
 
     var theme: ShellTheme {
         ThemeCatalog.theme(selectedThemeID)
     }
 
+    var isAIConfigured: Bool {
+        let key = ProcessInfo.processInfo.environment["OPENAI_API_KEY"]
+        return key?.isEmpty == false
+    }
+
     init() {
+        let themeID: ShellThemeID
         if
             let raw = UserDefaults.standard.string(forKey: Keys.theme),
             let saved = ShellThemeID(rawValue: raw)
         {
-            selectedThemeID = saved
+            themeID = saved
         } else {
-            selectedThemeID = .cyberpunk
+            themeID = .cyberpunk
         }
+
+        selectedThemeID = themeID
+        enabledWidgets = WidgetEngine.load(for: ThemeCatalog.theme(themeID))
 
         if UserDefaults.standard.object(forKey: Keys.immersive) == nil {
             immersiveMode = true
@@ -114,10 +143,52 @@ final class ShellController: ObservableObject {
         openBrowser(at: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".Trash"))
     }
 
+    func setWidget(_ kind: WidgetKind, enabled: Bool) {
+        if enabled {
+            enabledWidgets.insert(kind)
+        } else {
+            enabledWidgets.remove(kind)
+            if kind == .assistant {
+                isAssistantOpen = false
+            }
+        }
+        WidgetEngine.save(enabledWidgets, for: selectedThemeID)
+    }
+
+    func resetWidgetsForCurrentTheme() {
+        enabledWidgets = WidgetEngine.reset(for: theme)
+        isAssistantOpen = false
+    }
+
+    func sendAssistantMessage() {
+        let prompt = assistantDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !prompt.isEmpty, !assistantBusy else { return }
+
+        assistantDraft = ""
+        assistantMessages.append(AssistantMessage(role: .user, text: prompt))
+        assistantBusy = true
+
+        Task {
+            do {
+                let reply = try await aiClient.send(prompt, controller: self)
+                assistantMessages.append(AssistantMessage(role: .assistant, text: reply.text))
+            } catch {
+                assistantMessages.append(
+                    AssistantMessage(
+                        role: .assistant,
+                        text: error.localizedDescription
+                    )
+                )
+            }
+            assistantBusy = false
+        }
+    }
+
     func closeAllPanels() {
         browserURL = nil
         isSettingsOpen = false
         isLauncherOpen = false
+        isAssistantOpen = false
     }
 
     private func observeWorkspace() {

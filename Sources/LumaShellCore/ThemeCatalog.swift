@@ -14,7 +14,8 @@ public enum ThemeCatalog {
                 accent2: "#FFFFFF", selection: "#334FAD", shadow: "#000000"
             ),
             panelHeight: 28, cornerRadius: 0, startLabel: "◆",
-            computerLabel: "Macintosh HD", trashLabel: "Trash"
+            computerLabel: "Macintosh HD", trashLabel: "Trash",
+            defaultWidgets: [.clock, .memory, .quickLaunch, .assistant]
         ),
         ShellTheme(
             id: .windowsXP,
@@ -28,7 +29,8 @@ public enum ThemeCatalog {
                 accent2: "#F0B400", selection: "#2A63D4", shadow: "#071D5B"
             ),
             panelHeight: 46, cornerRadius: 7, startLabel: "start",
-            computerLabel: "My Computer", trashLabel: "Recycle Bin"
+            computerLabel: "My Computer", trashLabel: "Recycle Bin",
+            defaultWidgets: [.clock, .system, .quickLaunch, .assistant]
         ),
         ShellTheme(
             id: .cyberpunk,
@@ -42,7 +44,8 @@ public enum ThemeCatalog {
                 accent2: "#FF37D1", selection: "#123E57", shadow: "#000000"
             ),
             panelHeight: 58, cornerRadius: 2, startLabel: "LUMA//",
-            computerLabel: "CORE", trashLabel: "PURGE", preferredMonospacedUI: true
+            computerLabel: "CORE", trashLabel: "PURGE", preferredMonospacedUI: true,
+            defaultWidgets: [.clock, .system, .assistant]
         )
     ]
 

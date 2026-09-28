@@ -2,5 +2,8 @@
 .build/
 dist/
 DerivedData/
+.swiftpm/
 *.xcuserstate
 *.xccheckout
+.env
+.env.*

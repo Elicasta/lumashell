@@ -4,8 +4,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+echo "Cleaning previous product output..."
 rm -rf dist .build/lumashell-universal
 mkdir -p dist .build/lumashell-universal
+
+echo "Running tests..."
+swift test
 
 echo "Building arm64..."
 swift build -c release --arch arm64

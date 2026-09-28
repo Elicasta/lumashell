@@ -16,6 +16,7 @@ struct ShellRootView: View {
                 }
 
             DesktopView()
+            WidgetLayerView()
 
             if let url = controller.browserURL {
                 FloatingShellWindow(
@@ -31,7 +32,7 @@ struct ShellRootView: View {
             if controller.isSettingsOpen {
                 FloatingShellWindow(
                     title: theme.id == .cyberpunk ? "SYSTEM CONFIG" : "LumaShell Settings",
-                    preferredSize: CGSize(width: 620, height: 500),
+                    preferredSize: CGSize(width: 650, height: 560),
                     onClose: { controller.isSettingsOpen = false }
                 ) {
                     SettingsView()
@@ -44,6 +45,9 @@ struct ShellRootView: View {
 
             ShellBarView()
                 .zIndex(30)
+
+            LumaAssistantView()
+                .zIndex(40)
 
             VStack {
                 Spacer()
@@ -93,6 +97,10 @@ private struct ThemeBackground: View {
                     XPFieldBackdrop(size: geometry.size)
                 }
 
+                if theme.id == .macOS9 {
+                    ClassicMacPattern(size: geometry.size)
+                }
+
                 if theme.id == .cyberpunk {
                     CyberGrid(size: geometry.size)
                     RadialGradient(
@@ -104,6 +112,21 @@ private struct ThemeBackground: View {
                 }
             }
         }
+    }
+}
+
+private struct ClassicMacPattern: View {
+    let size: CGSize
+
+    var body: some View {
+        Path { path in
+            let step: CGFloat = 6
+            stride(from: CGFloat.zero, through: size.width + size.height, by: step).forEach { offset in
+                path.move(to: CGPoint(x: offset, y: 0))
+                path.addLine(to: CGPoint(x: 0, y: offset))
+            }
+        }
+        .stroke(Color.white.opacity(0.035), lineWidth: 1)
     }
 }
 
@@ -145,17 +168,25 @@ private struct CyberGrid: View {
     let size: CGSize
 
     var body: some View {
-        Path { path in
-            let step: CGFloat = 44
-            stride(from: CGFloat.zero, through: size.width, by: step).forEach { x in
-                path.move(to: CGPoint(x: x, y: 0))
-                path.addLine(to: CGPoint(x: x, y: size.height))
+        ZStack {
+            Path { path in
+                let step: CGFloat = 44
+                stride(from: CGFloat.zero, through: size.width, by: step).forEach { x in
+                    path.move(to: CGPoint(x: x, y: 0))
+                    path.addLine(to: CGPoint(x: x, y: size.height))
+                }
+                stride(from: CGFloat.zero, through: size.height, by: step).forEach { y in
+                    path.move(to: CGPoint(x: 0, y: y))
+                    path.addLine(to: CGPoint(x: size.width, y: y))
+                }
             }
-            stride(from: CGFloat.zero, through: size.height, by: step).forEach { y in
-                path.move(to: CGPoint(x: 0, y: y))
-                path.addLine(to: CGPoint(x: size.width, y: y))
-            }
+            .stroke(Color(hex: "#21E6FF").opacity(0.08), lineWidth: 1)
+
+            LinearGradient(
+                colors: [.clear, Color(hex: "#21E6FF").opacity(0.025), .clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
-        .stroke(Color(hex: "#21E6FF").opacity(0.08), lineWidth: 1)
     }
 }

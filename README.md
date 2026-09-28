@@ -4,40 +4,63 @@
 
 LumaShell is a native macOS desktop shell that gives the machine a different desktop personality without replacing macOS underneath.
 
-Version 0.1 ships three built-in environments:
+## v0.2
 
-- **Mac OS 9**: platinum-style top menu, classic desktop behavior, Macintosh HD / Trash language.
-- **Windows XP**: Start menu, blue taskbar, running-app buttons, My Computer / Recycle Bin language.
-- **Luma Neon**: a cyberpunk command shell with a neon grid, command index, terminal-like typography, and status telemetry styling.
+Three built-in environments:
 
-No Apple or Microsoft artwork is bundled. The historical themes are original, era-inspired UI treatments.
+- **Mac OS 9** — platinum-style menu bar, classic desktop language, clock, memory panel, Control Strip-style quick launch.
+- **Windows XP** — Start menu, blue taskbar, running-app buttons, system widget, quick launch.
+- **Luma Neon** — cyberpunk command deck, neon grid, system HUD, AI assistant.
 
-## What works in 0.1
+The themes are intentionally behavioral, not just recolors. Each theme remembers its own enabled widgets.
 
-- Native Swift + AppKit + SwiftUI app.
-- Full-screen shell workspace on every connected display.
-- App discovery from /Applications and ~/Applications.
-- Real app launching through NSWorkspace.
-- Live running-app taskbar.
-- Custom desktop icons and file browser.
-- Theme engine where layout and labels can change with the theme, not only colors.
-- LumaShell settings panel.
-- Launch-at-login support through ServiceManagement.
-- Accessibility permission request for later window-control modules.
-- Menu-bar recovery control.
-- **⌘⇧Esc** emergency hide shortcut.
-- Optional immersive mode that auto-hides the macOS Dock and menu bar while LumaShell is active.
-- GitHub Actions DMG build.
+### Widgets
+
+- Clock
+- System status
+- Memory
+- Quick Launch / Control Strip
+- Luma AI
+
+### Luma AI
+
+Luma uses the OpenAI Responses API and a local tool router. In the current private development build it can:
+
+- list and launch installed applications
+- change LumaShell themes
+- show or hide widgets
+- open Home, Desktop, Documents, Downloads, or Applications
+- hide LumaShell
+
+For local development, launch LumaShell with an `OPENAI_API_KEY` environment variable. The key is never committed to this repository.
+
+Before public distribution, direct API-key mode should be replaced by an authenticated backend so the app never ships a reusable OpenAI secret.
+
+## Shell features
+
+- Native Swift + AppKit + SwiftUI
+- Multi-display shell workspace
+- Real app discovery and launching
+- Live running-app taskbar
+- Real Desktop file visibility
+- Custom file browser
+- Theme-specific widgets
+- Per-theme widget persistence
+- Launch at login
+- Accessibility permission bridge
+- Menu-bar recovery controls
+- **⌘⇧Esc** emergency hide
+- Optional immersive Dock/menu-bar auto-hide
 
 ## Safety model
 
-LumaShell is intentionally a shell layer. It does not patch WindowServer, disable SIP, modify protected macOS files, or replace Finder binaries.
+LumaShell is a shell layer. It does not patch WindowServer, disable SIP, replace Finder binaries, or modify protected macOS system files.
 
 If anything feels wrong:
 
 1. Press **⌘⇧Esc**.
 2. Or use the **LS** menu-bar item and choose **Hide LumaShell**.
-3. Quit normally from the LS menu-bar item.
+3. Quit from the LS menu-bar item.
 
 ## Build locally
 
@@ -52,64 +75,47 @@ Run:
 swift run LumaShell
 ```
 
-Run tests:
+Run with AI enabled for local development:
 
 ```bash
-swift test
+OPENAI_API_KEY="your-key" swift run LumaShell
 ```
 
-Build a DMG:
+Build the universal DMG:
 
 ```bash
 chmod +x Scripts/build-dmg.sh
 ./Scripts/build-dmg.sh
 ```
 
-The DMG is written to:
+Output:
 
 ```
 dist/LumaShell.dmg
 ```
 
-## GitHub build
+## CI
 
-Every push to `main` builds a DMG and uploads it as the **LumaShell-DMG** Actions artifact.
+Each push uses one macOS runner to:
 
-Tags matching `v*` also publish the DMG to a GitHub Release.
+1. clean previous product output
+2. run tests
+3. compile arm64
+4. compile x86_64
+5. create a universal binary
+6. build the DMG
+7. upload the DMG artifact
 
-## Architecture
+New pushes cancel stale in-progress builds. CI artifacts are retained for seven days. Version tags matching `v*` publish the DMG as a GitHub Release.
 
-```
-LumaShellCore
-  Theme model
-  Theme catalog
+## Direction
 
-LumaShell
-  App / shell lifecycle
-  Multi-display shell windows
-  App registry
-  Running-app bridge
-  Desktop
-  Launcher
-  Taskbar / classic menu bar
-  File browser
-  Settings
-  macOS permission bridges
-```
+Next high-value work is intentionally limited:
 
-## Next modules
-
-The current architecture leaves clean insertion points for:
-
-- Accessibility-powered move / resize / minimize / focus controls.
-- Windows-style snap layouts.
-- A true shell-owned always-on-top taskbar mode.
-- Custom wallpapers, icon packs, cursors, startup sounds, and UI sound sets.
-- Theme packages loaded from disk instead of only built-in themes.
-- Classic Mac control strip.
-- XP-style Run dialog and system tray modules.
-- Cyberpunk widgets, system telemetry, media controls, and command palette.
-- Signed/notarized release builds.
+- Accessibility-powered window move/resize/snap
+- draggable/repositionable widgets
+- a production AI backend
+- optional Aqua and Windows 95 themes only if they get their own interaction language
 
 ## License
 

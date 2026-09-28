@@ -8,8 +8,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-14
+  core-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Core theme tests
+        run: swift test --filter ThemeCatalogTests
+
+  mac-build:
+    needs: core-tests
+    runs-on: macos-latest
 
     steps:
       - name: Checkout

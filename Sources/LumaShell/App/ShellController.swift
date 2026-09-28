@@ -18,6 +18,12 @@ final class ShellController: ObservableObject {
         }
     }
 
+    @Published var showDesktopFiles: Bool {
+        didSet {
+            UserDefaults.standard.set(showDesktopFiles, forKey: Keys.showDesktopFiles)
+        }
+    }
+
     @Published var isLauncherOpen = false
     @Published var isSettingsOpen = false
     @Published var browserURL: URL?
@@ -48,6 +54,12 @@ final class ShellController: ObservableObject {
             immersiveMode = true
         } else {
             immersiveMode = UserDefaults.standard.bool(forKey: Keys.immersive)
+        }
+
+        if UserDefaults.standard.object(forKey: Keys.showDesktopFiles) == nil {
+            showDesktopFiles = true
+        } else {
+            showDesktopFiles = UserDefaults.standard.bool(forKey: Keys.showDesktopFiles)
         }
 
         observeWorkspace()
@@ -137,6 +149,7 @@ final class ShellController: ObservableObject {
     private enum Keys {
         static let theme = "lumashell.theme"
         static let immersive = "lumashell.immersive"
+        static let showDesktopFiles = "lumashell.showDesktopFiles"
     }
 }
 

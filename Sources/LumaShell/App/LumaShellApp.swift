@@ -1,17 +1,19 @@
 import AppKit
-import SwiftUI
 
 @main
-struct LumaShellApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-
-    var body: some Scene {
-        Settings { EmptyView() }
-    }
-}
-
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var coordinator: ShellWindowCoordinator?
+
+    static func main() {
+        let application = NSApplication.shared
+        let delegate = AppDelegate()
+
+        application.delegate = delegate
+        application.setActivationPolicy(.accessory)
+        application.run()
+
+        withExtendedLifetime(delegate) {}
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let controller = ShellController()
@@ -22,5 +24,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        .terminateNow
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        NSApp.presentationOptions = []
     }
 }

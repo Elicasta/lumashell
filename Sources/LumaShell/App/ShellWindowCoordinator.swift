@@ -24,11 +24,9 @@ final class ShellWindowCoordinator: NSObject {
     }
 
     func start() {
-        NSApp.setActivationPolicy(.accessory)
         rebuildWindows()
         installStatusItem()
         installEscapeHotkey()
-        applyPresentationMode()
 
         screenObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
@@ -37,6 +35,7 @@ final class ShellWindowCoordinator: NSObject {
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.rebuildWindows()
+                self?.showShell()
             }
         }
 
@@ -44,10 +43,19 @@ final class ShellWindowCoordinator: NSObject {
     }
 
     private func rebuildWindows() {
-        windows.forEach { $0.close() }
+        windows.forEach {
+            $0.orderOut(nil)
+            $0.close()
+        }
         windows.removeAll()
 
-        for screen in NSScreen.screens {
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else {
+            NSLog("LumaShell: no screens available yet")
+            return
+        }
+
+        for screen in screens {
             let root = ShellRootView(screenName: screen.localizedName)
                 .environmentObject(controller)
 
@@ -58,14 +66,24 @@ final class ShellWindowCoordinator: NSObject {
                 defer: false,
                 screen: screen
             )
+
             window.title = "LumaShell"
             window.contentViewController = NSHostingController(rootView: root)
+            window.isReleasedWhenClosed = false
+            window.hidesOnDeactivate = false
+            window.canHide = false
             window.isOpaque = true
             window.backgroundColor = .black
             window.hasShadow = false
             window.level = .normal
-            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+            window.collectionBehavior = [
+                .canJoinAllSpaces,
+                .fullScreenAuxiliary,
+                .stationary,
+                .ignoresCycle
+            ]
             window.setFrame(screen.frame, display: true)
+
             windows.append(window)
         }
     }
@@ -75,14 +93,20 @@ final class ShellWindowCoordinator: NSObject {
         item.button?.title = "LS"
 
         let menu = NSMenu()
+
         let show = menu.addItem(withTitle: "Show LumaShell", action: #selector(showFromMenu), keyEquivalent: "")
         show.target = self
+
         let hide = menu.addItem(withTitle: "Hide LumaShell", action: #selector(hideFromMenu), keyEquivalent: "")
         hide.target = self
 
         let themeMenu = NSMenu(title: "Theme")
         for theme in ThemeCatalog.all {
-            let menuItem = NSMenuItem(title: theme.name, action: #selector(selectThemeFromMenu(_:)), keyEquivalent: "")
+            let menuItem = NSMenuItem(
+                title: theme.name,
+                action: #selector(selectThemeFromMenu(_:)),
+                keyEquivalent: ""
+            )
             menuItem.representedObject = theme.id.rawValue
             menuItem.target = self
             themeMenu.addItem(menuItem)
@@ -103,7 +127,9 @@ final class ShellWindowCoordinator: NSObject {
     private func installEscapeHotkey() {
         localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if Self.isEscapeChord(event) {
-                Task { @MainActor [weak self] in self?.hideShell() }
+                Task { @MainActor [weak self] in
+                    self?.hideShell()
+                }
                 return nil
             }
             return event
@@ -111,7 +137,9 @@ final class ShellWindowCoordinator: NSObject {
 
         globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard Self.isEscapeChord(event) else { return }
-            Task { @MainActor [weak self] in self?.hideShell() }
+            Task { @MainActor [weak self] in
+                self?.hideShell()
+            }
         }
     }
 
@@ -127,11 +155,9 @@ final class ShellWindowCoordinator: NSObject {
             return
         }
 
-        if controller.immersiveMode {
-            NSApp.presentationOptions = [.autoHideDock, .autoHideMenuBar]
-        } else {
-            NSApp.presentationOptions = []
-        }
+        NSApp.presentationOptions = controller.immersiveMode
+            ? [.autoHideDock, .autoHideMenuBar]
+            : []
     }
 
     @objc private func showFromMenu() {
@@ -158,7 +184,16 @@ final class ShellWindowCoordinator: NSObject {
     }
 
     func showShell() {
-        windows.forEach { $0.orderFrontRegardless() }
+        guard !windows.isEmpty else {
+            rebuildWindows()
+            guard !windows.isEmpty else { return }
+        }
+
+        windows.forEach { window in
+            window.setFrame(window.screen?.frame ?? window.frame, display: true)
+            window.orderFrontRegardless()
+        }
+
         NSApp.activate(ignoringOtherApps: true)
         applyPresentationMode()
     }
@@ -170,8 +205,16 @@ final class ShellWindowCoordinator: NSObject {
     }
 
     deinit {
-        if let localKeyMonitor { NSEvent.removeMonitor(localKeyMonitor) }
-        if let globalKeyMonitor { NSEvent.removeMonitor(globalKeyMonitor) }
-        if let screenObserver { NotificationCenter.default.removeObserver(screenObserver) }
+        NSApp.presentationOptions = []
+
+        if let localKeyMonitor {
+            NSEvent.removeMonitor(localKeyMonitor)
+        }
+        if let globalKeyMonitor {
+            NSEvent.removeMonitor(globalKeyMonitor)
+        }
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+        }
     }
 }

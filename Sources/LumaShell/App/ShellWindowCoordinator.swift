@@ -184,10 +184,10 @@ final class ShellWindowCoordinator: NSObject {
     }
 
     func showShell() {
-        guard !windows.isEmpty else {
+        if windows.isEmpty {
             rebuildWindows()
-            guard !windows.isEmpty else { return }
         }
+        guard !windows.isEmpty else { return }
 
         windows.forEach { window in
             window.setFrame(window.screen?.frame ?? window.frame, display: true)
@@ -205,8 +205,6 @@ final class ShellWindowCoordinator: NSObject {
     }
 
     deinit {
-        NSApp.presentationOptions = []
-
         if let localKeyMonitor {
             NSEvent.removeMonitor(localKeyMonitor)
         }

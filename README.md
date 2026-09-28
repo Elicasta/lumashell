@@ -6,6 +6,9 @@ LumaShell is a native macOS desktop shell that gives the machine a different des
 
 ## v0.2
 
+**0.2.1 launch fix:** LumaShell now uses a long-lived AppKit application lifecycle so the shell does not exit after the initial window flash.
+
+
 Three built-in environments:
 
 - **Mac OS 9** — platinum-style menu bar, classic desktop language, clock, memory panel, Control Strip-style quick launch.
